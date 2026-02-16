@@ -31,6 +31,8 @@ require (
 	golang.org/x/text v0.32.0
 )
 
+replace github.com/muesli/reflow => github.com/geordee/reflow v0.3.1
+
 require (
 	github.com/alecthomas/chroma/v2 v2.14.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
