@@ -667,6 +667,17 @@ func (m *stashModel) handleFiltering(msg tea.Msg) tea.Cmd {
 
 // VIEW
 
+func (m stashModel) contentPadding() string {
+	if m.common.cfg.Align != "center" || m.common.cfg.GlamourMaxWidth == 0 {
+		return ""
+	}
+	contentWidth := min(int(m.common.cfg.GlamourMaxWidth), m.common.width) //nolint:gosec
+	if padding := (m.common.width - contentWidth) / 2; padding > 0 {
+		return strings.Repeat(" ", padding)
+	}
+	return ""
+}
+
 func (m stashModel) view() string {
 	var s string
 	switch m.viewState {
@@ -733,13 +744,17 @@ func (m stashModel) view() string {
 			}
 		}
 
+		pad := m.contentPadding()
+
 		s += fmt.Sprintf(
-			"%s%s\n\n  %s\n\n%s\n\n%s  %s\n\n%s",
+			"%s%s\n\n%s  %s\n\n%s\n\n%s%s  %s\n\n%s",
 			loadingIndicator,
 			logoOrFilter,
+			pad,
 			header,
 			populatedView,
 			blankLines,
+			pad,
 			pagination,
 			help,
 		)
@@ -801,9 +816,10 @@ func (m stashModel) populatedView() string {
 	var b strings.Builder
 
 	// Empty states
+	pad := m.contentPadding()
 	if len(mds) == 0 {
 		f := func(s string) {
-			b.WriteString("  " + grayFg(s))
+			b.WriteString(pad + "  " + grayFg(s))
 		}
 
 		switch m.sections[m.sectionIndex].key {

@@ -16,8 +16,13 @@ const (
 )
 
 func stashItemView(b *strings.Builder, m stashModel, index int, md *markdown) {
+	contentWidth := m.common.width
+	if m.common.cfg.GlamourMaxWidth > 0 {
+		contentWidth = min(int(m.common.cfg.GlamourMaxWidth), m.common.width) //nolint:gosec
+	}
 	var (
-		truncateTo  = uint(m.common.width - stashViewHorizontalPadding*2) //nolint:gosec
+		truncateTo  = uint(contentWidth - stashViewHorizontalPadding*2) //nolint:gosec
+		pad         = m.contentPadding()
 		gutter      string
 		title       = truncate.StringWithTail(md.Note, truncateTo, ellipsis)
 		date        = md.relativeTime()
@@ -82,8 +87,8 @@ func stashItemView(b *strings.Builder, m stashModel, index int, md *markdown) {
 		}
 	}
 
-	fmt.Fprintf(b, "%s %s%s%s%s\n", gutter, icon, separator, separator, title)
-	fmt.Fprintf(b, "%s %s", gutter, date)
+	fmt.Fprintf(b, "%s%s %s%s%s%s\n", pad, gutter, icon, separator, separator, title)
+	fmt.Fprintf(b, "%s%s %s", pad, gutter, date)
 	if hasEditedBy {
 		fmt.Fprintf(b, " %s", editedBy)
 	}
