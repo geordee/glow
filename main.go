@@ -41,6 +41,7 @@ var (
 	showAllFiles     bool
 	showLineNumbers  bool
 	preserveNewLines bool
+	align            string
 	mouse            bool
 
 	rootCmd = &cobra.Command{
@@ -170,6 +171,10 @@ func validateOptions(cmd *cobra.Command) error {
 	tui = viper.GetBool("tui")
 	showAllFiles = viper.GetBool("all")
 	preserveNewLines = viper.GetBool("preserveNewLines")
+	align = viper.GetString("align")
+	if align != "left" && align != "center" {
+		return fmt.Errorf("invalid align value %q: must be \"left\" or \"center\"", align)
+	}
 	showLineNumbers = viper.GetBool("showLineNumbers")
 
 	if pager && tui {
@@ -359,6 +364,7 @@ func runTUI(path string, content string) error {
 	cfg.GlamourMaxWidth = width
 	cfg.EnableMouse = mouse
 	cfg.PreserveNewLines = preserveNewLines
+	cfg.Align = align
 
 	// Run Bubble Tea program
 	if _, err := ui.NewProgram(cfg, content).Run(); err != nil {
@@ -402,6 +408,7 @@ func init() {
 	rootCmd.Flags().BoolVarP(&showAllFiles, "all", "a", false, "show system files and directories (TUI-mode only)")
 	rootCmd.Flags().BoolVarP(&showLineNumbers, "line-numbers", "l", false, "show line numbers (TUI-mode only)")
 	rootCmd.Flags().BoolVarP(&preserveNewLines, "preserve-new-lines", "n", false, "preserve newlines in the output")
+	rootCmd.Flags().StringVar(&align, "align", "center", `horizontal alignment: "left" or "center" (TUI-mode only)`)
 	rootCmd.Flags().BoolVarP(&mouse, "mouse", "m", false, "enable mouse wheel (TUI-mode only)")
 	_ = rootCmd.Flags().MarkHidden("mouse")
 
@@ -413,11 +420,13 @@ func init() {
 	_ = viper.BindPFlag("debug", rootCmd.Flags().Lookup("debug"))
 	_ = viper.BindPFlag("mouse", rootCmd.Flags().Lookup("mouse"))
 	_ = viper.BindPFlag("preserveNewLines", rootCmd.Flags().Lookup("preserve-new-lines"))
+	_ = viper.BindPFlag("align", rootCmd.Flags().Lookup("align"))
 	_ = viper.BindPFlag("showLineNumbers", rootCmd.Flags().Lookup("line-numbers"))
 	_ = viper.BindPFlag("all", rootCmd.Flags().Lookup("all"))
 
 	viper.SetDefault("style", styles.AutoStyle)
 	viper.SetDefault("width", 0)
+	viper.SetDefault("align", "center")
 	viper.SetDefault("all", true)
 
 	rootCmd.AddCommand(configCmd, manCmd)

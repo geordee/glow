@@ -476,7 +476,13 @@ func glamourRender(m pagerModel, markdown string) (string, error) {
 		}
 	}
 
-	return content.String(), nil
+	// center content horizontally when narrower than the viewport
+	result := content.String()
+	if m.common.cfg.Align == "center" && width > 0 && width < m.viewport.Width {
+		result = lipgloss.PlaceHorizontal(m.viewport.Width, lipgloss.Center, result)
+	}
+
+	return result, nil
 }
 
 func (m *pagerModel) initWatcher() {
