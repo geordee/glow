@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -12,11 +13,14 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/muesli/reflow/ansi"
 	"github.com/muesli/reflow/truncate"
 	"github.com/sahilm/fuzzy"
+
+	"github.com/charmbracelet/glow/v2/utils"
 )
 
 const (
@@ -714,10 +718,34 @@ func (m stashModel) view() string {
 		populatedView := m.populatedView()
 		populatedViewHeight := strings.Count(populatedView, "\n") + 2
 
+		pad := m.contentPadding()
+
+		// Title: base name of cwd, rendered as markdown H1
+		title := ""
+		titleHeight := 0
+		if m.common.cwd != "" {
+			name := filepath.Base(m.common.cwd)
+			name = strings.ReplaceAll(name, "-", " ")
+			name = strings.ReplaceAll(name, "_", " ")
+			name = strings.ToUpper(name)
+
+			r, err := glamour.NewTermRenderer(
+				utils.GlamourStyle(m.common.cfg.GlamourStyle, false),
+				glamour.WithWordWrap(0),
+			)
+			if err == nil {
+				if rendered, err := r.Render("# " + name); err == nil {
+					title = pad + strings.TrimSpace(rendered) + "\n"
+					titleHeight = 1
+				}
+			}
+		}
+
 		// We need to fill any empty height with newlines so the footer reaches
 		// the bottom.
 		availHeight := m.common.height -
 			stashViewTopPadding -
+			titleHeight -
 			populatedViewHeight -
 			helpHeight -
 			stashViewBottomPadding
@@ -744,12 +772,11 @@ func (m stashModel) view() string {
 			}
 		}
 
-		pad := m.contentPadding()
-
 		s += fmt.Sprintf(
-			"%s%s\n\n%s  %s\n\n%s\n\n%s%s  %s\n\n%s",
+			"%s%s\n\n%s%s  %s\n\n%s\n\n%s%s  %s\n\n%s",
 			loadingIndicator,
 			logoOrFilter,
+			title,
 			pad,
 			header,
 			populatedView,
